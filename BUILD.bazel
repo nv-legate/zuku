@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+# Description:
+#   zuku is a productivity library for Realm applications
+
+licenses([])
+
+exports_files([])
+
+cc_library(
+    name = "zuku",
+    hdrs = [
+      "src/zuku/barrier.h",
+      "src/zuku/defer.h",
+      "src/zuku/future.h",
+      "src/zuku/hash.h",
+      "src/zuku/init.h",
+      "src/zuku/instance_cache.h",
+      "src/zuku/link_promise.h",
+      "src/zuku/mesh.h",
+      "src/zuku/processor.h",
+      "src/zuku/profile.h",
+      "src/zuku/promise.h",
+      "src/zuku/realm_variants.h",
+      "src/zuku/reshard.h",
+      "src/zuku/reshard_broadcast.h",
+      "src/zuku/reshard_gather_shards.h",
+      "src/zuku/reshard_manager.h",
+      "src/zuku/reshard_point_to_point.h",
+      "src/zuku/reshard_scatter_gather.h",
+      "src/zuku/reshard_scatter_shards.h",
+      "src/zuku/resolve_dependency.h",
+      "src/zuku/shape.h",
+      "src/zuku/store.h",
+      "src/zuku/stream.h",
+      "src/zuku/task.h",
+      "src/zuku/task_base.h",
+      "src/zuku/tiled_array.h",
+      "src/zuku/token.h",
+      "src/zuku/type_traits.h",
+      "src/zuku/zuku_utils.h",
+      "src/zuku/vector.h",
+    ],
+    deps = ["@realm"],
+    visibility = ["//visibility:public"],
+)

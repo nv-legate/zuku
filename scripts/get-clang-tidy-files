@@ -1,0 +1,13 @@
+#! /usr/bin/env python
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+import json
+
+with open("compile_commands.json") as f:
+  data = json.load(f)
+
+for entry in data:
+  print(entry["file"])
+
