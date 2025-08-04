@@ -439,6 +439,53 @@ TEST(ReshardConfigTest, Contract3DSharding) {
   }
 }
 
+TEST(ReshardConfigTest, Bad3DReshardingWithPartialReplication) {
+  Sharding src{
+      .dims = {{
+                   .size = 8,
+                   .sharding = 4,
+                   .permutation = 0,
+               },
+               {.size = 128, .sharding = 1, .permutation = 1},
+               {.size = 1, .sharding = 1, .permutation = 2},
+               {.size = 1, .sharding = 2, .permutation = 3}},
+      .devices = {{.start = 0, .num_devices = 8}},
+  };
+
+  Sharding dst{
+      .dims = {{
+                   .size = 8,
+                   .sharding = 2,
+                   .permutation = 0,
+               },
+               {.size = 128, .sharding = 1, .permutation = 1},
+               {.size = 1, .sharding = 1, .permutation = 2},
+               {.size = 1, .sharding = 2, .permutation = 3}},
+      .devices = {{.start = 0, .num_devices = 4}},
+  };
+
+  for (int i = 0; i < 8; ++i) {
+    Processor p =
+        Processor::Create({.local = i, .global = i}, Processor::Type::TEST);
+    auto config = DetermineShardingConfig(p, src, dst);
+    ASSERT_TRUE(std::holds_alternative<ScatterGatherConfig>(config));
+    const ScatterGatherConfig& sg_config =
+        std::get<ScatterGatherConfig>(config);
+
+    if (i < 4) {
+      auto tile_bounds = ComputeTileBounds(i, dst);
+      int64_t tile_size = ComputeRealmShapeSize(tile_bounds);
+      std::vector<int> covered(tile_size, 0);
+      // make sure the dst is covered
+      for (const auto& slice : sg_config.to_target) {
+        zuku::Iterate(covered.data(), slice.bounds, tile_bounds,
+                      [](int& data, auto... indices) { data = 1; });
+      }
+      EXPECT_THAT(covered, Each(Eq(1)));
+    }
+  }
+}
+
 }  // namespace
 }  // namespace zuku
 

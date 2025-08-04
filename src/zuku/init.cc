@@ -8,6 +8,8 @@
 #include "realm/logging.h"
 #include "realm/machine.h"
 #include "realm/processor.h"
+#include <realm/event.h>
+#include <realm/network.h>
 #include <unistd.h>
 
 #include <array>
@@ -196,6 +198,10 @@ Realm::Runtime Init(int argc, char** argv, RealmConfig cfg) {
   rt.collective_spawn(p, Realm::Processor::TASK_ID_PROCESSOR_NOP, nullptr, 0,
                       Realm::Event::merge_events(e1, e2, e3, e4))
       .wait();
+
+  Realm::Network::barrier();
+  Realm::Network::barrier();
+  MarkProfile("start zuku clock");
 
   Realm::Machine machine = Realm::Machine::get_machine();
   Realm::AddressSpace rank =

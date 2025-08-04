@@ -94,30 +94,8 @@ ReshardConfigVariant DetermineScatterGatherConfig(const Processor& p,
       return std::nullopt;
     }();
 
-    switch (src.dims.size()) {
-      case 0:
-        return GetScatterGatherConfig<1, long long>(
-            last_dim_different, src_shard, dst_shard, src, dst);
-      case 1:
-        return GetScatterGatherConfig<1, long long>(
-            last_dim_different, src_shard, dst_shard, src, dst);
-      case 2:
-        return GetScatterGatherConfig<2, long long>(
-            last_dim_different, src_shard, dst_shard, src, dst);
-      case 3:
-        return GetScatterGatherConfig<3, long long>(
-            last_dim_different, src_shard, dst_shard, src, dst);
-      case 4:
-        return GetScatterGatherConfig<4, long long>(
-            last_dim_different, src_shard, dst_shard, src, dst);
-#if REALM_MAX_DIM >= 5
-      case 5:
-        return GetScatterGatherConfig<5, long long>(
-            last_dim_different, src_shard, dst_shard, src, dst);
-#endif
-      default:
-        throw std::runtime_error("unsupported no. dims");
-    }
+    return GetScatterGatherConfig(last_dim_different, src_shard, dst_shard, src,
+                                  dst);
   }
   return UnsupportedConfig{};
 }

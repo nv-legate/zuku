@@ -16,6 +16,8 @@ void StopProfileRegion(uint64_t id);
 void ProfileRegion(const Processor& p, std::string name, Realm::Event start,
                    Realm::Event stop);
 
+void MarkProfile(const std::string& name);
+
 void MarkProfile(const Processor& p, const std::string& name,
                  const Realm::Event& ev);
 

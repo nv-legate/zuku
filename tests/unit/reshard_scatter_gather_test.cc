@@ -35,7 +35,7 @@ TEST(ReshardScatterGather, GatherToSingleGPU) {
                ShardingDim{.size = 2048, .sharding = 1, .permutation = 1}},
       .devices = src_mesh};
 
-  auto sg_config = GetScatterGatherConfig<2, int64_t>(
+  auto sg_config = GetScatterGatherConfig(
       /*dim=*/0, /*src_shard=*/1, /*dst_shard=*/1, source_sharding,
       dest_sharding);
 

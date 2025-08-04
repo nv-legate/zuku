@@ -23,14 +23,34 @@ namespace {
 bool sProfilingActive{false};
 Realm::Logger log_profile("zuku-profile");
 
-#ifdef zuku_HAS_NVTX
 nvtxDomainHandle_t zukuDomainHandle;
-std::array<std::vector<nvtxEventAttributes_t>,
-           std::size_t(Processor::Type::NUM_TYPES)>
-    nvtx_attrs;
+
+#ifdef zuku_HAS_NVTX
+nvtxEventAttributes_t AttrTemplate() {
+  nvtxEventAttributes_t attr;
+  attr.version = NVTX_VERSION;
+  attr.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
+  attr.colorType = NVTX_COLOR_ARGB;
+  attr.color = 0xFFFF0000;
+  attr.messageType = NVTX_MESSAGE_TYPE_ASCII;
+  return attr;
+}
 #endif
 
 }  // namespace
+
+void MarkProfile(const std::string& name) {
+  if (!sProfilingActive) {
+    return;
+  }
+#ifdef zuku_HAS_NVTX
+  std::size_t color_hash = std::hash<std::string>{}(name) % 0xFFFFFF;
+  auto attr = AttrTemplate();
+  attr.message.ascii = name.c_str();
+  attr.color = 0xFF000000 | color_hash;
+  nvtxDomainMarkEx(zukuDomainHandle, &attr);
+#endif
+}
 
 void MarkProfile(const Processor& p, const std::string& name,
                  const Realm::Event& ev) {
@@ -38,14 +58,7 @@ void MarkProfile(const Processor& p, const std::string& name,
     return;
   }
 #ifdef zuku_HAS_NVTX
-  on(Processor::Util()).after(ev).defer([=] {
-    std::size_t color_hash = std::hash<std::string>{}(name) % 0xFFFFFF;
-    nvtxEventAttributes_t& attr =
-        nvtx_attrs[std::size_t(p.type())][p.local_id()];
-    attr.message.ascii = name.c_str();
-    attr.color = 0xFF000000 | color_hash;
-    nvtxDomainMarkEx(zukuDomainHandle, &attr);
-  });
+  on(Processor::Util()).after(ev).defer([=] { MarkProfile(name); });
 #endif
 }
 
@@ -85,7 +98,7 @@ uint64_t StartProfileRegion(const Processor& p, const std::string& name) {
   static_assert(std::is_same_v<uint64_t, nvtxRangeId_t>,
                 "nvtxRangeId_t matches");
   std::size_t color_hash = std::hash<std::string>{}(name) % 0xFFFFFF;
-  nvtxEventAttributes_t& attr = nvtx_attrs[std::size_t(p.type())][p.local_id()];
+  auto attr = AttrTemplate();
   attr.message.ascii = name.c_str();
   attr.color = 0xFF000000 | color_hash;
   return nvtxDomainRangeStartEx(zukuDomainHandle, &attr);
@@ -109,17 +122,6 @@ void SetupProfiling() {
   sProfilingActive = true;
 #ifdef zuku_HAS_NVTX
   zukuDomainHandle = nvtxDomainCreateA("zuku");
-  for (auto type :
-       {Processor::Type::UTIL, Processor::Type::CPU, Processor::Type::GPU}) {
-    nvtx_attrs[std::size_t(type)].resize(Processor::NumForType(type));
-    for (auto&& attr : nvtx_attrs[std::size_t(type)]) {
-      attr.version = NVTX_VERSION;
-      attr.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
-      attr.colorType = NVTX_COLOR_ARGB;
-      attr.color = 0xFFFF0000;
-      attr.messageType = NVTX_MESSAGE_TYPE_ASCII;
-    }
-  }
 #endif
 }
 
